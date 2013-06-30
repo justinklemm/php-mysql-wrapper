@@ -12,8 +12,8 @@ This is a very old PHP class that I created circa 2006 to act as a wrapper for P
     // Disconnect from database
     DB::disconnect();
 
-which makes it fast and easily accessibile in function, but also quite limited. For instance, it's not meant for situations in which you will need to connect to multiple databases concurrently.
+This makes thw wrapper fast and easily accessibile in functions, but also quite limited. For instance, it's not meant for situations in which you will need to connect to multiple databases concurrently.
 
-This class uses PHP's (very dated) mysql_* functions which have been depreciated as of PHP 5.5. My intent is to update this classes to one of PHP's newer MySQL libraries.
+This class uses PHP's (very dated) `mysql_*` functions which have been depreciated as of PHP 5.5. My intent is to update this classes to one of PHP's newer MySQL libraries.
 
 There are certainly more robust database solutions out there, but for simple projects, this class may prove useful.
