@@ -31,6 +31,11 @@ class DB {
 	}
 
 
+	public static function selectDatabase ($name) {
+		self::$db->select_db($name);
+	}
+
+
 	public static function createDatabase ($name) {
 		if (!self::$db) return false;
 		return self::$db->query(" CREATE DATABASE `{$name}` ");
