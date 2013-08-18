@@ -52,23 +52,6 @@ class DB {
 	}
 
 
-	public static function getRow (&$resource) {
-		return $resource->fetch_assoc();
-	}
-
-
-	public static function getObject (&$resource) {
-		return $resource->fetch_object();
-	}
-
-
-	public static function dataSeek (&$resource, $row = 0) {
-		$numRows = self::rowsInResource($resource);
-		if ($numRows == 0 || $row < 0 || $row >= $numRows) return false;
-		return $resource->data_seek($row);
-	}
-
-
 	public static function queryArray ($query, $single = false, $keyField = null, $valField = null) {
 		if (!self::$db) return false;
 
@@ -96,57 +79,14 @@ class DB {
 	}
 
 
-	private static function buildMatchQuery ($match) {
-		$query = "";
-		if (is_array($match)) {
-			foreach ($match as $col => $val) {
-				if (strpos($col, '?') !== false) {
-					$query .= " AND " . str_replace('?', self::quote($val), $col);
-				}else{
-					$query .= " AND $col = " . self::quote($val);
-				}
-			}
-		}
-		return $query;
-	}
 
-
-	private static function buildSetQuery ($data, $dateField = null) {
-		$query = "";
-		if (is_array($data) || $dateField) {
-			if (is_array($data)) {
-				foreach ($data as $field => $val) {
-					$query .= " `{$field}` = ".self::quote($val).", ";
-				}
-			}
-			if ($dateField && !isset($data[$dateField])) {
-				$query .= " `{$dateField}` = NOW() ";
-			} else {
-				$query = substr($query, 0, strlen($query) - 2);
-			}
-		}
-		return $query;
-	}
-
-
-	private static function buildSelect ($table, $fields = '*', $match = null, $orderBy = null, $orderDesc = false, $limit = null, $groupBy = null) {
-		$query = " SELECT {$fields} FROM `{$table}` WHERE 1 ";
-		$query .= self::buildMatchQuery($match);
-		if ($groupBy)	$query .= " GROUP BY {$groupBy} ";
-		if ($orderBy)	$query .= " ORDER BY {$orderBy} ";
-		if ($orderDesc) $query .= " DESC ";
-		if ($limit) 	$query .= " LIMIT {$limit} ";
-		return $query;
+	public static function select ($table, $fields = '*', $match = null, $orderBy = null, $orderDesc = false, $limit = null, $groupBy = null) {
+		return self::query(self::buildSelect($table, $fields, $match, $orderBy, $orderDesc, $limit, $groupBy));
 	}
 
 
 	public static function selectArray ($table, $fields = '*', $match = null, $orderBy = null, $orderDesc = false, $limit = null, $groupBy = null) {
 		return self::queryArray(self::buildSelect($table, $fields, $match, $orderBy, $orderDesc, $limit, $groupBy));
-	}
-
-
-	public static function select ($table, $fields = '*', $match = null, $orderBy = null, $orderDesc = false, $limit = null, $groupBy = null) {
-		return self::query(self::buildSelect($table, $fields, $match, $orderBy, $orderDesc, $limit, $groupBy));
 	}
 
 
@@ -192,19 +132,6 @@ class DB {
 	}
 
 
-	public static function incrementField ($table, $field, $increment = 1, $match = null, &$affectedRows = null) {
-		if (!self::$db) return false;
-
-		$query = " UPDATE `{$table}` SET `{$field}` = `{$field}` + {$increment} WHERE 1 ";
-		$query .= self::buildMatchQuery($match);
-		self::query($query);
-
-		if ($affectedRows !== null) $affectedRows = self::affectedRows();
-		
-		return true;
-	}
-
-
 	public static function delete ($table, $match = null, &$affectedRows = null) {
 		if (!self::$db) return false;
 
@@ -214,6 +141,19 @@ class DB {
 
 		if ($affectedRows !== null) $affectedRows = self::affectedRows();
 
+		return true;
+	}
+
+
+	public static function incrementField ($table, $field, $increment = 1, $match = null, &$affectedRows = null) {
+		if (!self::$db) return false;
+
+		$query = " UPDATE `{$table}` SET `{$field}` = `{$field}` + {$increment} WHERE 1 ";
+		$query .= self::buildMatchQuery($match);
+		self::query($query);
+
+		if ($affectedRows !== null) $affectedRows = self::affectedRows();
+		
 		return true;
 	}
 
@@ -237,6 +177,23 @@ class DB {
 		$result = self::query($query);
 
 		return $result->num_rows;
+	}
+
+
+	public static function getRow (&$resource) {
+		return $resource->fetch_assoc();
+	}
+
+
+	public static function getObject (&$resource) {
+		return $resource->fetch_object();
+	}
+
+
+	public static function dataSeek (&$resource, $row = 0) {
+		$numRows = self::rowsInResource($resource);
+		if ($numRows == 0 || $row < 0 || $row >= $numRows) return false;
+		return $resource->data_seek($row);
 	}
 
 
@@ -266,6 +223,50 @@ class DB {
 	    }
 
 	    return $val;
+	}
+
+
+	private static function buildMatchQuery ($match) {
+		$query = "";
+		if (is_array($match)) {
+			foreach ($match as $col => $val) {
+				if (strpos($col, '?') !== false) {
+					$query .= " AND " . str_replace('?', self::quote($val), $col);
+				}else{
+					$query .= " AND $col = " . self::quote($val);
+				}
+			}
+		}
+		return $query;
+	}
+
+
+	private static function buildSetQuery ($data, $dateField = null) {
+		$query = "";
+		if (is_array($data) || $dateField) {
+			if (is_array($data)) {
+				foreach ($data as $field => $val) {
+					$query .= " `{$field}` = ".self::quote($val).", ";
+				}
+			}
+			if ($dateField && !isset($data[$dateField])) {
+				$query .= " `{$dateField}` = NOW() ";
+			} else {
+				$query = substr($query, 0, strlen($query) - 2);
+			}
+		}
+		return $query;
+	}
+
+
+	private static function buildSelect ($table, $fields = '*', $match = null, $orderBy = null, $orderDesc = false, $limit = null, $groupBy = null) {
+		$query = " SELECT {$fields} FROM `{$table}` WHERE 1 ";
+		$query .= self::buildMatchQuery($match);
+		if ($groupBy)	$query .= " GROUP BY {$groupBy} ";
+		if ($orderBy)	$query .= " ORDER BY {$orderBy} ";
+		if ($orderDesc) $query .= " DESC ";
+		if ($limit) 	$query .= " LIMIT {$limit} ";
+		return $query;
 	}
 
 }
