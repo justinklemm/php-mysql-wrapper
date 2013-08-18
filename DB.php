@@ -19,7 +19,7 @@ class DB {
 
 	public static function connect ($host, $db, $user, $pass) {
 		$db = new mysqli($host, $user, $pass, $db);
-		if (mysqli_connect_errno()) die(mysqli_connect_error());
+		if ($db->connect_errno) die($db->connect_error);
 		self::$db = $db;
 		return true;
 	}
